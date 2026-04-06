@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>RNG 선택기</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #111;
+  color: white;
+}
+
+input, button {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 5px;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+#result {
+  margin-top: 20px;
+  font-size: 24px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>🎲 선택기</h1>
+
+<input id="nameInput" placeholder="이름 입력">
+<button onclick="addPlayer()">추가</button>
+
+<p id="playerList"></p>
+
+<label>
+  <input type="checkbox" id="duplicateCheck" checked onchange="toggleMode()">
+  중복 가능
+</label>
+
+<br>
+
+<input id="pickCount" type="number" placeholder="제거 인원 수" style="display:none">
+
+<br><br>
+
+<button onclick="startPick()">시작</button>
+<button onclick="nextPick()">다음 단계</button>
+
+<h2 id="result"></h2>
+
+<script>
+let players = [];
+let pool = [];
+let remainingPicks = 0;
+let isTournament = false;
+
+function addPlayer() {
+  const input = document.getElementById("nameInput");
+  const name = input.value.trim();
+
+  if (name !== "") {
+    players.push(name);
+    input.value = "";
+    renderPlayers();
+  }
+}
+
+function renderPlayers() {
+  document.getElementById("playerList").innerText = players.join(", ");
+}
+
+function toggleMode() {
+  const checkbox = document.getElementById("duplicateCheck");
+  const pickCountInput = document.getElementById("pickCount");
+
+  pickCountInput.style.display = checkbox.checked ? "none" : "inline";
+}
+
+function startPick() {
+  const checkbox = document.getElementById("duplicateCheck");
+
+  if (players.length === 0) return;
+
+  if (checkbox.checked) {
+    // 중복 가능 → 1명 바로 뽑기
+    const randomIndex = Math.floor(Math.random() * players.length);
+    const selected = players[randomIndex];
+    showResult("🎉 " + selected + " 당첨!");
+  } else {
+    // 토너먼트 시작
+    const count = parseInt(document.getElementById("pickCount").value);
+
+    if (isNaN(count) || count < 1) return;
+
+    pool = [...players];
+    remainingPicks = count;
+    isTournament = true;
+
+    nextPick();
+  }
+}
+
+function nextPick() {
+  if (!isTournament) return;
+
+  if (pool.length <= 2) {
+    // 결승
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const winner = pool[randomIndex];
+
+    showResult("🏆 최종 당첨: " + winner);
+    isTournament = false;
+    return;
+  }
+
+  if (remainingPicks <= 0) {
+    showResult("다음 단계 버튼 누르셈");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  const selected = pool[randomIndex];
+
+  pool.splice(randomIndex, 1);
+  remainingPicks--;
+
+  showResult("❌ 탈락: " + selected + " (남은 인원: " + pool.length + ")");
+}
+
+function showResult(text) {
+  const el = document.getElementById("result");
+
+  el.innerText = "선정 중...";
+  setTimeout(() => {
+    el.innerText = text;
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
